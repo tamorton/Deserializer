@@ -55,27 +55,27 @@ For example, the C# code:
 Will write a file output.bin. Opening the file in Deserializer then clicking display will produce the following output:
 
 
-=== Stream 0 ===
---- Record: 0 ---
-Library libraryID:2 libraryName:Deserializer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+	=== Stream 0 ===
+	--- Record: 0 ---
+	Library libraryID:2 libraryName:Deserializer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
 
---- Record: 1 ---
-DeserialTest.TestClass (id 1) ClassWithMembersAndTypes
-   [0] singleint (int32) 123
-   [1] intarray (primitivearray) PrimitiveArray (id 3) length:3
-          [0]10 [1]20 [2]30
-   [2] classlist (systemclass) System.Collections.Generic.List (id 4) SystemClassWithMembersAndTypes
-         [0] _items (class) Array (id 5) rank:1
-               [0] length 4
-                  [0] DeserialTest.SmallClass (id 6) ClassWithMembersAndTypes
-                        [0] smallint (int32) 100
-                  [1] DeserialTest.SmallClass (id 7 metadataID 6) ClassWithId
-                        [0] smallint (int32) 200
-                  [2] DeserialTest.SmallClass (id 8 metadataID 6) ClassWithId
-                        [0] smallint (int32) 300
-                  [3] null
-         [1] _size (int32) 3
-         [2] _version (int32) 3
+	--- Record: 1 ---
+	DeserialTest.TestClass (id 1) ClassWithMembersAndTypes
+	   [0] singleint (int32) 123
+	   [1] intarray (primitivearray) PrimitiveArray (id 3) length:3
+			  [0]10 [1]20 [2]30
+	   [2] classlist (systemclass) System.Collections.Generic.List (id 4) SystemClassWithMembersAndTypes
+			 [0] _items (class) Array (id 5) rank:1
+				   [0] length 4
+					  [0] DeserialTest.SmallClass (id 6) ClassWithMembersAndTypes
+							[0] smallint (int32) 100
+					  [1] DeserialTest.SmallClass (id 7 metadataID 6) ClassWithId
+							[0] smallint (int32) 200
+					  [2] DeserialTest.SmallClass (id 8 metadataID 6) ClassWithId
+							[0] smallint (int32) 300
+					  [3] null
+			 [1] _size (int32) 3
+			 [2] _version (int32) 3
 
 		 
    
