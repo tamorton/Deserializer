@@ -919,7 +919,7 @@ void TClassWithId::write(QTextStream& outstr, int indent)
     for(int i=0; i<memberList.length(); i++) {
         outstr << "\n";
         indentOutput(outstr, indent + 1);
-        outstr << "[" << i+1 << "] ";
+        outstr << "[" << i << "] ";
         outstr << metadataRecord->classInfo.memberNames.at(i);
         memberList.at(i)->writeType(outstr);
         memberList.at(i)->write(outstr, indent);
@@ -1017,7 +1017,7 @@ void TSystemClassWithMembersAndTypes::write(QTextStream& outstr, int indent) {
     for(int i=0; i<classInfo.memberNames.length(); i++) {
         outstr << "\n";
         indentOutput(outstr, indent + 1);
-        outstr << "[" << i+1 << "] ";
+        outstr << "[" << i << "] ";
         outstr << classInfo.memberNames.at(i);
         memberList.at(i)->writeType(outstr);
         memberList.at(i)->write(outstr, indent+1);
@@ -1073,7 +1073,7 @@ void TClassWithMembersAndTypes::write(QTextStream& outstr, int indent) {
     for(int i=0; i<classInfo.memberNames.length(); i++) {
         outstr << "\n";
         indentOutput(outstr, indent + 1);
-        outstr << "[" << i+1 << "] ";
+        outstr << "[" << i << "] ";
         outstr << classInfo.memberNames.at(i);
         memberList.at(i)->writeType(outstr);
         memberList.at(i)->write(outstr, indent + 1);
@@ -1223,13 +1223,13 @@ void TBinaryArray::write(QTextStream& outstr, int indent)
     for(int r=0; r<rank; r++) {
         outstr << "\n";
         indentOutput(outstr, indent+1);
-        outstr << "[" << r+1 << "] length " << lengths[r];
+        outstr << "[" << r << "] length " << lengths[r];
     }
 
     for(int i=0; i<arraySize; i++) {
         outstr << "\n";
         indentOutput(outstr, indent+2);
-        outstr << "[" << i+1 << "] ";
+        outstr << "[" << i << "] ";
         if(array[i] == NULL) {
             outstr << "null";
         }
@@ -1615,7 +1615,7 @@ void TArraySingleObject::write(QTextStream& outstr, int indent)
         outstr << "\n";
 
         indentOutput(outstr, indent + 1);
-        outstr << "[" << i+1 << "] ";
+        outstr << "[" << i << "] ";
 
         if(typeArray[i] == 0) {
             outstr << "null";
@@ -1777,7 +1777,7 @@ void TArraySingleString::write(QTextStream& outstr, int indent)
     if(objectArray != NULL) {
         for(int i=0; i<length; i++) {
             indentOutput(outstr, indent+1);
-            outstr << "[" << i+1 << "] ";
+            outstr << "[" << i << "] ";
 
             if(objectArray[i] != NULL) {
                 objectArray[i]->write(outstr, indent+1);
@@ -2462,7 +2462,7 @@ void TStream::write(QTextStream& ts)
         }
         TFileRecord* r = recordList.at(i);
         if(r != NULL && !r->isReferenced) {
-            ts << "--- Record: " << i+1 << " ---\n";
+            ts << "--- Record: " << i << " ---\n";
             r->write(ts, 0);
             ts << "\n\n";
         }

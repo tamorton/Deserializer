@@ -59,7 +59,7 @@ void MainWindow::on_actionDisplay_triggered()
     for(int n=0; n<deserial->streamCount(); n++) {
         QString str;
         QTextStream ts(&str);
-        ts << "=== Stream " << n+1 << " ===\n";
+        ts << "=== Stream " << n << " ===\n";
         deserial->getStream(n)->write(ts);
         ui->textEdit->append(str);
     }
@@ -84,7 +84,7 @@ void MainWindow::on_actionSave_triggered()
     QTextStream ts(&outfile);
 
     for(int n=0; n<deserial->streamCount(); n++) {
-        ts << "=== Stream " << n+1 << " ===\n";
+        ts << "=== Stream " << n << " ===\n";
         deserial->getStream(n)->write(ts);
     }
 
@@ -101,9 +101,8 @@ void MainWindow::on_actionMembers_triggered()
     QTextStream ts(&str);
 
     // int
-    path << "0" << "Storage.Stor+AssayAllDataHash" << "AllData" << "Header" << "ChanCount";
+    path << "0" << "DeserialTest.TestClass" << "singleint";
 
-    qint64 chancount;
     for(int i=0; i<path.length(); i++) {
         ts << path.at(i) << "/";
     }
@@ -114,18 +113,22 @@ void MainWindow::on_actionMembers_triggered()
         ts << "Not found";
     }
     else {
-        bool ok = result->getInt(chancount);
+        qint64 singleint;
+        bool ok = result->getInt(singleint);
         if(ok) {
-            ts << chancount;
+            ts << singleint;
         }
         else ts << "not got";
     }
     ui->textEdit->append(str);
+
+
     str = "";
     path.clear();
 
-    // string list
-    path << "0" << "Storage.Stor+AssayAllDataHash" << "AllData" << "Header" << "ChanNames" << "_items";
+    // class list
+    path << "0" << "DeserialTest.TestClass" << "classlist" << "_items" << "1" << "smallint";
+
     for(int i=0; i<path.length(); i++) {
         ts << path.at(i) << "/";
     }
@@ -136,84 +139,45 @@ void MainWindow::on_actionMembers_triggered()
         ts << "Not found";
     }
     else {
-        TBinaryObject** d;
-        int len;
-        bool ok = result->getObjectArray(&d, len);
+        qint64 int1;
+        bool ok = result->getInt(int1);
         if(ok) {
-            for(int i=0; i<len; i++) {
-                QString s;
-                if(d[i]->getString(s)) {
-                    ts << s;
-                }
-                else ts << "not got";
-                ts << ", ";
+            ts << int1;
+        }
+        else ts << "not got";
+    }
+    ui->textEdit->append(str);
+
+    str = "";
+    path.clear();
+
+    // int array
+    path << "0" << "DeserialTest.TestClass" << "intarray";
+
+    for(int i=0; i<path.length(); i++) {
+        ts << path.at(i) << "/";
+    }
+    ts << ": ";
+
+    result = deserial->getObject(path);
+    if(result == NULL) {
+        ts << "Not found";
+    }
+    else {
+        qint32* a;
+        int len;
+        bool ok = result->getInt32Array(&a, len);
+        if(ok) {
+            ts << "length:" << len << " values: ";
+            for(int p=0; p<len; p++) {
+                ts << a[p] << ", ";
             }
         }
-        else ts << "not got";
-    }
-    ui->textEdit->append(str);
-    str = "";
-    path.clear();
-
-    // int
-    qint64 itemcount;
-    path << "0" << "Storage.Stor+AssayAllDataHash" << "AllData" << "Data" << "SampVals" << "_size";
-    for(int i=0; i<path.length(); i++) {
-        ts << path.at(i) << "/";
-    }
-    ts << ": ";
-
-    result = deserial->getObject(path);
-    if(result == NULL) {
-        ts << "Not found";
-    }
-    else {
-        bool ok = result->getInt(itemcount);
-        if(ok) {
-            ts << itemcount;
-        }
-        else ts << "not got";
+        else ts << "nope";
         ts << "\n";
     }
 
     ui->textEdit->append(str);
-    str = "";
-    path.clear();
-
-    // objectarray
-    path << "0" << "Storage.Stor+AssayAllDataHash" << "AllData" << "Data" << "SampVals" << "_items";
-
-    for(qint64 item=0; item<5; item++) {
-
-        QStringList itempath = path;
-        QString itemstr;
-        itemstr.sprintf("%d", item);
-        itempath << itemstr << "_items";
-
-        for(int i=0; i<itempath.length(); i++) {
-            ts << itempath.at(i) << "/";
-        }
-        ts << ": ";
-
-        result = deserial->getObject(itempath);
-        if(result == NULL) {
-            ts << itemstr << "Not found\n";
-        }
-        else {
-            double* d;
-            int len;
-            bool ok = result->getDoubleArray(&d, len);
-            if(ok) {
-                ts << "length:" << len << " values:" << d[0];
-            }
-            else ts << "nope";
-            ts << "\n";
-        }
-    }
-
-    ui->textEdit->append(str);
-    str = "";
-    path.clear();
 }
 
 void MainWindow::on_actionLog_triggered()
