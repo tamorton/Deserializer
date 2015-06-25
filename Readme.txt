@@ -1,4 +1,4 @@
-Binary serialization in C# writes a file that can be used to restore the objects and their values. Unfortunately, deserialization in C# needs the class definitions to create instances of the saved classes. So if you are trying to read data saved in a file by someone else, C# won't help you.
+Binary serialization in C# writes a file that can be used to restore the objects and their values. Unfortunately, deserialization in C# needs the class definitions to create instances of the saved classes.
 
 Deserializer is written in C++ and can read the binary file and produce a list of the classes along with the names, types and values of the class members.
 
