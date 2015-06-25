@@ -8,13 +8,7 @@ Deserializer is written in C++ and can read the binary file and produce a list o
 The file contains one or more streams. Each call to serialize an object writes a stream. The stream is a series of records, beginning with the header record and ending with the end message record. The format of the records is described in the Microsoft document [MS-NRBF].pdf available online.
 
 You can recognize a file of this type because it usually starts with hexadecimal:
-000000  00 
-000001  01 00 00 00 
-000005  ff ff ff ff 
-000009  01 00 00 00 
-000013  00 00 00 00 
-000017  0c 
-000018  02 00 00 00
+00 01 00 00 00 ff ff ff ff 01 00 00 00 00 00 00 00 0c 02 00 00 00
 
 followed by text, something like: 
 Deserializer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -22,22 +16,22 @@ Deserializer, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
 
 For example, the C# code:
 
-namespace DeserialTest
-{
-    [Serializable]
-    class TestClass
-    {
-        public int singleint;
-        public int[] intarray;
-        public List<SmallClass> classlist;
-    }
+	namespace DeserialTest
+	{
+		[Serializable]
+		class TestClass
+		{
+			public int singleint;
+			public int[] intarray;
+			public List<SmallClass> classlist;
+		}
 
-    [Serializable]
-    class SmallClass
-    {
-        public int smallint;
-    }
-}
+		[Serializable]
+		class SmallClass
+		{
+			public int smallint;
+		}
+	}
 
 	TestClass t = new TestClass();
 	t.singleint = 123;
@@ -123,9 +117,9 @@ The code was written using Qt. It has some dependency on Qt types such as QStrin
 
 Reading of the following records has not yet been implemented, so files containing them won't open:
 
-SystemClassWithMembers
-ClassWithMembers
-MethodCall
-MethodReturn
+	SystemClassWithMembers
+	ClassWithMembers
+	MethodCall
+	MethodReturn
 
 
