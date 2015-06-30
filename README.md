@@ -1,5 +1,5 @@
 # Deserializer
-Reads data from c# binary serialization files
+Reads data from C# binary serialization files using C++
 
 Binary serialization in C# writes a file that can be used to restore the objects and their values. Unfortunately, deserialization in C# needs the class definitions to create instances of the saved classes.
 
