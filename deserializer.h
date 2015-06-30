@@ -78,6 +78,7 @@ public:
     virtual bool getInt(qint64&) { return false; }
     virtual bool getUnsigned(quint64&) { return false; }
     virtual bool getDouble(double&) { return false; }
+    virtual bool getFloat(float&) { return false; }
     virtual bool getString(QString&) { return false; }
     virtual bool getDateTime(QDateTime&) { return false; }
 
@@ -225,6 +226,7 @@ public:
     void write(QTextStream& outstr) override;
     void writeType(QTextStream& outstr) override;
     TPrimitiveSingle* clone() { return new TPrimitiveSingle(*this); }
+    bool getFloat(float& result) override { result = value; return true; }
 };
 
 // --------- 12 ------------
@@ -336,12 +338,14 @@ public:
     virtual bool getInt(qint64&) { return false; }
     virtual bool getUnsigned(quint64&) { return false; }
     virtual bool getDouble(double&) { return false; }
+    virtual bool getFloat(float&) { return false; }
     virtual bool getString(QString&) { return false; }
     virtual bool getDateTime(QDateTime&) { return false; }
 
     virtual bool getBoolArray(bool**, int&) { return false; }
     virtual bool getInt32Array(qint32**, int&) { return false; }
     virtual bool getDoubleArray(double**, int&) { return false; }
+    virtual bool getStringArray(QStringList&) { return false; }
     virtual bool getObjectArray(TBinaryObject***, int&)  { return false; }
 
     virtual void write(QTextStream&, int) {}
@@ -369,12 +373,14 @@ public:
     bool getBoolArray(bool**, int&) override;
     bool getInt32Array(qint32**, int&) override;
     bool getDoubleArray(double**, int&) override;
+    bool getStringArray(QStringList&) override;
     bool getObjectArray(TBinaryObject***, int&);
 
     bool getBool(bool& result) override;
     bool getInt(qint64& result) override;
     bool getUnsigned(quint64& result) override;
     bool getDouble(double& result) override;
+    bool getFloat(float& result) override;
     bool getString(QString& result) override;
     bool getDateTime(QDateTime& result) override;
 };
@@ -398,6 +404,7 @@ public:
     bool getInt(qint64& result) override;
     bool getUnsigned(quint64& result) override;
     bool getDouble(double& result) override;
+    bool getFloat(float& result) override;
     bool getString(QString& result) override;
     bool getDateTime(QDateTime& result) override;
 };
@@ -411,6 +418,7 @@ public:
 
     TBinaryString();
     bool read(TBinaryInput& input, QList<TFileRecord*>& recordList) override;
+    bool readNoRef(char ref, TBinaryInput& input, QList<TFileRecord*>& recordList);
     void write(QTextStream& outstr, int indent) override;
     void writeType(QTextStream& outstr) override;
     TBinaryType* cloneType() override;
@@ -744,13 +752,11 @@ public:
 class TArraySingleString : public TFileRecord
 {
 public:
-    qint32 length;
-    TFileRecord** objectArray;
-
     TArraySingleString();
     ~TArraySingleString();
     bool read(TBinaryInput& input, QList<TFileRecord*>& recordList) override;
     void write(QTextStream& outstr, int indent) override;
+    bool getStringArray(QStringList&) override;
 };
 
 // --------- 21 ------------
@@ -1110,7 +1116,7 @@ public:
     void clearList();
     int recordCount();
     TFileRecord* getRecord(int n);
-    void associateReferences();
+    qint32 associateReferences();
     TFileRecord* getClass(const QString& name);
 
 private:
@@ -1132,12 +1138,14 @@ public:
     int read(TBinaryInput& input);
     int streamCount();
     TStream* getStream(int n);
-    void associateReferences();
+    qint32 associateReferences();
     void getErrorString(int error, QString& str);
     TSearchType* getObject(QStringList& path);
+    void getLastPath(QString& path);
 
 private:
     QList<TStream*> streamList;
+    QStringList lastPath;
 
     void clearList();
 };

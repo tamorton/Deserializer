@@ -343,6 +343,12 @@ bool TBinaryType::getDouble(double& result)
     return false;
 }
 
+bool TBinaryType::getFloat(float& result)
+{
+    if(refRecord != NULL) return refRecord->getFloat(result);
+    return false;
+}
+
 bool TBinaryType::getDateTime(QDateTime& result)
 {
     if(refRecord != NULL) return refRecord->getDateTime(result);
@@ -364,6 +370,12 @@ bool TBinaryType::getInt32Array(qint32** array, int& len)
 bool TBinaryType::getDoubleArray(double** array, int& len)
 {
     if(refRecord != NULL) return refRecord->getDoubleArray(array, len);
+    return false;
+}
+
+bool TBinaryType::getStringArray(QStringList& array)
+{
+    if(refRecord != NULL) return refRecord->getStringArray(array);
     return false;
 }
 
@@ -436,6 +448,12 @@ bool TBinaryPrimitive::getDouble(double& result)
     return value->getDouble(result);
 }
 
+bool TBinaryPrimitive::getFloat(float& result)
+{
+    if(value == NULL) return false;
+    return value->getFloat(result);
+}
+
 bool TBinaryPrimitive::getString(QString& result)
 {
     if(value == NULL) return false;
@@ -452,12 +470,33 @@ bool TBinaryPrimitive::getDateTime(QDateTime& result)
 TBinaryString::TBinaryString() : TBinaryType() {
 }
 
-bool TBinaryString::read(TBinaryInput& input, QList<TFileRecord*>&){
+bool TBinaryString::read(TBinaryInput& input, QList<TFileRecord*>& list){
     char ref;
     if(!input.readBytes(&ref, 1)) return false;
     if(ref == 6) {
-        if(!input.readBytes((char*)&objectID, 4)) return false;
-        if(!input.readString(value)) return false;
+        TBinaryObjectString* bos = new TBinaryObjectString();
+        list.append(bos);
+        if(!bos->read(input, list)) return false;
+        refID = bos->objectID;
+        return true;
+    }
+    if(ref == 9) {
+        if(!input.readBytes((char*)&refID, 4)) return false;
+        return true;
+    }
+    if(ref == 0x0a) {
+        // null
+        return true;
+    }
+    return false;
+}
+
+bool TBinaryString::readNoRef(char ref, TBinaryInput& input, QList<TFileRecord*>& list){
+    if(ref == 6) {
+        TBinaryObjectString* bos = new TBinaryObjectString();
+        list.append(bos);
+        if(!bos->read(input, list)) return false;
+        refID = bos->objectID;
         return true;
     }
     if(ref == 9) {
@@ -476,7 +515,6 @@ void TBinaryString::write(QTextStream& outstr, int indent){
 
     outstr << value;
     if(refRecord != NULL) {
-        outstr << "\n";
         refRecord->write(outstr, indent+1);
     }
     else if(refID != 0) {
@@ -485,7 +523,7 @@ void TBinaryString::write(QTextStream& outstr, int indent){
 }
 
 void TBinaryString::writeType(QTextStream& outstr){
-    outstr << " (string) ";
+    outstr << " (binary string) ";
 }
 
 TBinaryType* TBinaryString::cloneType() {
@@ -495,6 +533,10 @@ TBinaryType* TBinaryString::cloneType() {
 
 bool TBinaryString::getString(QString& result)
 {
+    if(refRecord != NULL) {
+        // string in ref
+        return refRecord->getString(result);
+    }
     result = value;
     return true;
 }
@@ -1707,28 +1749,19 @@ bool TArraySingleObject::getObjectArray(TBinaryObject*** array, int& len)
 
 // --------- 17 ------------
 TArraySingleString::TArraySingleString() : TFileRecord() {
-    objectArray = NULL;
 }
 
 TArraySingleString::~TArraySingleString() {
-    if(objectArray != NULL) {
-        for(int i=0; i<length; i++) {
-            if(objectArray[i] != NULL) delete objectArray[i];
-        }
-        delete[] objectArray;
-    }
 }
 
 bool TArraySingleString::read(TBinaryInput& input, QList<TFileRecord*>& recordList) {
     if(!input.readBytes((char*)&objectID, 4)) return false;
+    qint32 length;
     if(!input.readBytes((char*)&length, 4)) return false;
     classInfo.displayName = "ArraySingleString";
     classInfo.name = "ArraySingleString";
 
-    if(length == 0) return true;
-
     // objects loaded here to add multiple nulls to count
-    objectArray = new TFileRecord*[length];
     for(int m=0; m<length; m++) {
         char ref;
         if(!input.readBytes(&ref, 1)) return false;
@@ -1740,28 +1773,18 @@ bool TArraySingleString::read(TBinaryInput& input, QList<TFileRecord*>& recordLi
             // ObjectNullMultiple256
             unsigned char n;
             if(!input.readBytes((char*)&n, 1)) return false;
-
-            for(int i=0; i<n; i++) {
-                objectArray[m+i] = NULL;
-            }
             m += n;
         }
         else if(ref == 14) {
             // ObjectNullMultiple
             qint32 n;
             if(!input.readBytes((char*)&n, 4)) return false;
-
-            for(int i=0; i<n; i++) {
-                objectArray[m+i] = NULL;
-            }
             m += n;
         }
         else {
-            objectArray[m] = getRecordType(ref);
-            if(objectArray[m] == NULL) return false;
-            objectArray[m]->isReferenced = true;
-
-            if(!objectArray[m]->read(input, recordList)) return false;
+            TBinaryString* str = new TBinaryString();
+            str->readNoRef(ref, input, recordList);
+            memberList.append(str);
         }
     }
 
@@ -1772,21 +1795,23 @@ void TArraySingleString::write(QTextStream& outstr, int indent)
 {
     if(indent > MAX_INDENT) {outstr << "..."; return;}
 
-    outstr << "ArraySingleString (id " << objectID << ") length:" << length << "\n";
+    outstr << "ArraySingleString (id " << objectID << ") length:" << memberList.length() << "\n";
 
-    if(objectArray != NULL) {
-        for(int i=0; i<length; i++) {
-            indentOutput(outstr, indent+1);
-            outstr << "[" << i << "] ";
-
-            if(objectArray[i] != NULL) {
-                objectArray[i]->write(outstr, indent+1);
-            }
-            else {
-                outstr << "null";
-            }
-        }
+    for(int i=0; i<memberList.length(); i++) {
+        indentOutput(outstr, indent+1);
+        outstr << "[" << i << "] ";
+        memberList.at(i)->write(outstr, indent+1);
     }
+}
+
+bool TArraySingleString::getStringArray(QStringList& list)
+{
+    for(int i=0; i<memberList.length(); i++) {
+        QString str;
+        memberList.at(i)->getString(str);
+        list.append(str);
+    }
+    return true;
 }
 
 // --------- 21 ------------
@@ -2489,10 +2514,11 @@ TFileRecord* TStream::getRecord(int n)
     return recordList.at(n);
 }
 
-void TStream::associateReferences()
+qint32 TStream::associateReferences()
 {
     // find record with object id referenced by member
     // within same stream
+    // returns record not found or 0 on success
 
     QList<TBinaryType*> btlist;
     for (int i = 0; i < recordList.size(); ++i) {
@@ -2502,17 +2528,20 @@ void TStream::associateReferences()
 
     for(int i=0; i<btlist.size(); i++) {
         TBinaryType* b = btlist.at(i);
-
+        bool found = false;
         for (int j = 0; j < recordList.size(); ++j) {
             TFileRecord* testrec = recordList.at(j);
             if(testrec->objectID == b->refID) {
                 b->refRecord = testrec;
                 testrec->isReferenced = true;
+                found = true;
                 break;
             }
         }
+        if(!found) return b->refID;
     }
 
+    return 0;
 }
 
 TFileRecord* TStream::getClass(const QString& name)
@@ -2582,12 +2611,14 @@ void TDeserializer::clearList()
     streamList.clear();
 }
 
-void TDeserializer::associateReferences()
+qint32 TDeserializer::associateReferences()
 {
     // find record with object id referenced by member
     for (int i = 0; i < streamList.size(); ++i) {
-        streamList.at(i)->associateReferences();
+        qint32 result = streamList.at(i)->associateReferences();
+        if(result != 0) return result;
     }
+    return 0;
 }
 
 int TDeserializer::streamCount()
@@ -2607,6 +2638,7 @@ TSearchType* TDeserializer::getObject(QStringList& path)
     // 1:record class displayname
     // 2:member name or index(number)
     // ...:member name or index(number)
+    lastPath = path;
 
     if(path.size() < 3) return NULL;
 
@@ -2627,6 +2659,15 @@ TSearchType* TDeserializer::getObject(QStringList& path)
         if(result == NULL) return NULL;
     }
     return result;
+}
+
+void TDeserializer::getLastPath(QString& path)
+{
+    path = "";
+    for(int s=0; s<lastPath.length(); s++) {
+        if(s > 0) path += "/";
+        path += lastPath.at(s);
+    }
 }
 
 void TDeserializer::getErrorString(int error, QString& str)
