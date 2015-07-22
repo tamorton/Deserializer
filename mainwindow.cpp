@@ -48,8 +48,33 @@ void MainWindow::on_actionOpen_triggered()
     msg.sprintf("Read %d streams", deserial->streamCount());
     ui->textEdit->append(msg);
 
-    deserial->associateReferences();
-    ui->textEdit->append("Associated records");
+    int rcount[23];
+    memset(rcount, 0, 23*sizeof(int));
+
+    for(int s=0; s<deserial->streamCount(); s++) {
+        TStream* stream = deserial->getStream(s);
+        msg.sprintf("stream %d: %d records", s, stream->recordCount());
+        ui->textEdit->append(msg);
+
+        for(int r=0; r<stream->recordCount(); r++) {
+            TFileRecord* rec = stream->getRecord(r);
+            rcount[rec->type]++;
+        }
+    }
+
+    for(int t=0; t<23; t++) {
+        msg.sprintf("type %d: %d records", t, rcount[t]);
+        ui->textEdit->append(msg);
+    }
+
+    result = deserial->associateReferences();
+    if(result != 0) {
+        msg.sprintf("Failed to associate record %d", result);
+        ui->textEdit->append(msg);
+    }
+    else {
+        ui->textEdit->append("Associated records");
+    }
 
     ui->textEdit->append("Ok");
 }

@@ -475,6 +475,7 @@ bool TBinaryString::read(TBinaryInput& input, QList<TFileRecord*>& list){
     if(!input.readBytes(&ref, 1)) return false;
     if(ref == 6) {
         TBinaryObjectString* bos = new TBinaryObjectString();
+        bos->type = 6;
         list.append(bos);
         if(!bos->read(input, list)) return false;
         refID = bos->objectID;
@@ -494,6 +495,7 @@ bool TBinaryString::read(TBinaryInput& input, QList<TFileRecord*>& list){
 bool TBinaryString::readNoRef(char ref, TBinaryInput& input, QList<TFileRecord*>& list){
     if(ref == 6) {
         TBinaryObjectString* bos = new TBinaryObjectString();
+        bos->type = 6;
         list.append(bos);
         if(!bos->read(input, list)) return false;
         refID = bos->objectID;
@@ -856,6 +858,7 @@ TBinaryType* TBinaryPrimitiveArray::cloneType() {
 TFileRecord::TFileRecord() {
     objectID = 0;
     isReferenced = false;
+    type = 0;
 }
 
 TFileRecord::~TFileRecord() {
@@ -1159,6 +1162,9 @@ TBinaryArray::TBinaryArray() : TFileRecord() {
 TBinaryArray::~TBinaryArray() {
 
     if(array != NULL) {
+        for(int i=0; i<arraySize; i++) {
+            if(array[i] != NULL) delete array[i];
+        }
         delete[] array;
     }
 
@@ -2884,6 +2890,7 @@ TFileRecord* getRecordType(char code) {
             record = (TFileRecord*)new TMethodReturn();
             break;
     }
+    if(record != NULL) record->type = code;
     return record;
 }
 

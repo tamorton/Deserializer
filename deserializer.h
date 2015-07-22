@@ -86,6 +86,7 @@ public:
     virtual bool getInt32Array(qint32**, int&) { return false; }
     virtual bool getDoubleArray(double**, int&) { return false; }
     virtual bool getObjectArray(TBinaryObject***, int&)  { return false; }
+    virtual ~TPrimitiveType() { }
 };
 
 // --------- 1 ------------
@@ -349,6 +350,7 @@ public:
     virtual bool getObjectArray(TBinaryObject***, int&)  { return false; }
 
     virtual void write(QTextStream&, int) {}
+    virtual ~TSearchType() { }
 };
 
 // ==========================================
@@ -362,7 +364,7 @@ public:
     qint32 refID;
 
     TBinaryType();
-    ~TBinaryType();
+    virtual ~TBinaryType();
     virtual bool read(TBinaryInput&, QList<TFileRecord*>&){ return true;}
     virtual bool readAdditional(TBinaryInput&){ return true;}
     virtual void writeType(QTextStream&) {}
@@ -514,9 +516,10 @@ public:
     qint32 objectID;
     TClassInfo classInfo;
     QList<TBinaryType*> memberList;
+    qint32 type;
 
     TFileRecord();
-    ~TFileRecord();
+    virtual ~TFileRecord();
     virtual bool read(TBinaryInput&, QList<TFileRecord*>&){ return true; }
     virtual void getReferences(QList<TBinaryType*>& list);
 
@@ -577,7 +580,6 @@ public:
     qint32 libraryID;
 
     TSystemClassWithMembersAndTypes();
-    ~TSystemClassWithMembersAndTypes();
     bool read(TBinaryInput& input, QList<TFileRecord*>& recordList) override;
     void write(QTextStream& outstr, int indent) override;
 };
@@ -1070,6 +1072,7 @@ class TBinaryInput
 {
 public:
     virtual bool readBytes(char*, int) { return false; }
+    virtual ~TBinaryInput() {}
 
     int readVariableInt();
     bool readString(QString& str);
